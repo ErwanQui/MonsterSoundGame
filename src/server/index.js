@@ -77,7 +77,7 @@ console.log(`
     // console.log('globalsState:', globalsState.getValues());
     // > globalsState: { master: 0, mute: false }
     const parameters = globalsState.getValues();
-    globalsState.set({NbMax: Math.ceil((parameters.Distance*parameters.Speed)/parameters.Time) + 1});
+    globalsState.set({NbMax: Math.ceil(parameters.Speed*(parameters.Distance + 1)/parameters.Time)});
 
     for (let i = 1; i <= globalsState.getValues().NbMax; i++) {
       // console.log("bonsoir")

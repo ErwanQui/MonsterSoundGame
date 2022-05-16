@@ -21,6 +21,10 @@ class PlayerExperience extends AbstractExperience {
     this.displayButton = "Begin";
     this.displayAngle = "Angle de tir : 0";
     this.killCount = 0;
+    this.killSound = document.createElement("audio");
+    this.killSound.type = "audio/mpeg";
+    this.killSound.src = "Audio/Kill.mp3";
+    this.killSound.loop = false;
     this.displayKills = [];
     this.lastDisplayKill = "Nobody died";
 
@@ -67,7 +71,7 @@ class PlayerExperience extends AbstractExperience {
     }
 
     if (window.DeviceOrientationEvent) {
-      console.log("oui")
+      console.log("L'orientation a bien été détectée")
       window.addEventListener("deviceorientation", (e) => {
         this.playerState.set({ShotAngle: Math.round(e.alpha)});
         this.displayAngle = "Angle de tir : " + this.playerState.getValues().ShotAngle;
@@ -101,7 +105,7 @@ class PlayerExperience extends AbstractExperience {
 
   AudioBegin() {
     this.audioContext.resume();
-    console.log("je suis là aussi");
+    console.log("Lancement du jeu");
     for (let i = 1; i <= this.globalsState.getValues().NbMax; i++) {
       this.Sounds[i-1].play();
     }
@@ -112,13 +116,14 @@ class PlayerExperience extends AbstractExperience {
   PopMonster(Monster) {
     this.ActiveMonsters.push(Monster);
     // this.Gains[Monster-1].connect(this.audioContext.destination)
-    console.log(this.globalsState.getValues())
+    console.log("Le monstre " + Monster + " est apparu !");
   }
 
   MoveMonster(MonsterId, GlobalDistance, Monster, encoder, Gain, ShotAngle) {
     this.UpdateSoundPos(Monster, GlobalDistance, encoder, Gain, ShotAngle);
-    if ((this.ActiveMonsters[this.ActiveMonsters.length-1] == MonsterId) && Monster.Distance == 10) {
+    if ((this.ActiveMonsters[this.ActiveMonsters.length-1] == MonsterId) && Monster.Distance == GlobalDistance) {
       Gain.connect(this.audioContext.destination);
+      console.log("Le monstre " + MonsterId + " a été connecté à l'audio en " + Monster.Position);
     }
     if (Monster.Killing) {
       this.PlayerDie(Monster.Distance, MonsterId);
@@ -142,24 +147,26 @@ class PlayerExperience extends AbstractExperience {
 
   KillMonster(tir, Monsters, Precision) {
     for (let i = 0; i < this.ActiveMonsters.length; i++) {
-      console.log(Monsters[this.ActiveMonsters[i] - 1].getValues().Position);
+      // console.log(Monsters[this.ActiveMonsters[i] - 1].getValues().Position);
       if (Monsters[this.ActiveMonsters[i] - 1].getValues().Killing) {
         if (Math.abs((tir - Monsters[this.ActiveMonsters[i] - 1].getValues().Position)) < Precision || Math.abs((tir - Monsters[this.ActiveMonsters[i] - 1].getValues().Position)) > 360 - Precision) {
-          console.log(i, this.ActiveMonsters[i]-1)
+          // console.log(i, this.ActiveMonsters[i]-1)
+          this.killSound.play()
           this.killCount += 1;
           this.Gains[this.ActiveMonsters[i]-1].disconnect(this.audioContext.destination);
+          console.log("Le monstre " + this.ActiveMonsters[i] + " a été déconnecté de l'audio en " + Monsters[this.ActiveMonsters[i] - 1].getValues().Position);
           this.displayKills.push(document.createElement("div"));
-          console.log(Monsters)
-          console.log(this.ActiveMonsters[i])
-          console.log(Monsters[this.ActiveMonsters[i] - 1].getValues())
+          // console.log(Monsters)
+          // console.log(this.ActiveMonsters[i])
+          // console.log(Monsters[this.ActiveMonsters[i] - 1].getValues())
           this.displayKills[this.killCount - 1].innerHTML = "Vous avez tué un monstre en : " + Monsters[this.ActiveMonsters[i] - 1].getValues().Position;
           if (this.killCount > 1) {
-            console.log(this.displayKills)
+            // console.log(this.displayKills)
             this.displayKills[this.killCount - 1].appendChild(this.displayKills[this.killCount - 2])
           }
           this.lastDisplayKill = this.displayKills[this.killCount - 1];
+          console.log("Le monstre " + this.ActiveMonsters[i] + " est mort !");
           this.ActiveMonsters.splice(i)
-          console.log("you kill it !")
           this.render();
         }
       }
@@ -169,15 +176,16 @@ class PlayerExperience extends AbstractExperience {
   PlayerDie(Distance, MonsterId) {
     // console.log(Distance, MonsterId)
     if (Distance == 0) {
-      console.log(this.ActiveMonsters)
+      // console.log(this.ActiveMonsters)
       for (let i = 0; i < this.ActiveMonsters.length; i++) {
         if (this.ActiveMonsters[i] == MonsterId) {
           this.playerState.set({Alive: false});
           for (let j = 0; j < this.ActiveMonsters.length; j++) {
             this.Gains[this.ActiveMonsters[j]-1].disconnect(this.audioContext.destination);
+            console.log("Le monstre " + this.ActiveMonsters[j] + " a été déconnecté de l'audio car le joueur est mort");
           }
           this.ActiveMonsters = [];
-          alert("vous êtes mort");
+          alert("Vous êtes mort...");
         }
       }
     }

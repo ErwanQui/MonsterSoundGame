@@ -21,7 +21,10 @@ class PlayerExperience extends AbstractExperience {
     // });
     // });
 
+    const execSync = require('child_process').execSync;
+// import { execSync } from 'child_process';  // replace ^ if using ES modules
 
+    this.clearing = execSync("printf '\\33c\\e[3J'", { encoding: 'utf-8' });  // the default is 'buffer'
   }
 
   async start() {
@@ -39,14 +42,14 @@ class PlayerExperience extends AbstractExperience {
 
   NewMonster(Monster, Global, Values) {
     if (Values.CurrentMonster < Values.NbMax) {
-      Global.set({CurrentMonster: Values.CurrentMonster + 1})
+      Global.set({CurrentMonster: Values.CurrentMonster + 1});
     }
     else {
-      Global.set({CurrentMonster: 1})
+      Global.set({CurrentMonster: 1});
     }
     Monster[Global.getValues().CurrentMonster - 1].set({Activity: true});
-    console.log(Values)
-    console.log(Global.getValues().CurrentMonster)
+    // console.log(Values);
+    // console.log(Global.getValues().CurrentMonster);
   }
 
   MonsterMove(Global, Move, Monster, Values) {
@@ -60,9 +63,13 @@ class PlayerExperience extends AbstractExperience {
       }
     }
     if (Monster.getValues().Distance == 0) {
-      Monster.set({Activity: false, Position: 0, Killing: false})
+      Monster.set({Activity: false, Position: 0, Killing: false});
     }
-    console.log(Monster.getValues())
+    if (Monster.getValues().Id == 1) {
+      console.log(this.clearing);
+      console.log("Le monstre actif est le " + Global.getValues().CurrentMonster + "\n");
+    }
+    console.log(Monster.getValues());
   }
 
   enter(client) {
