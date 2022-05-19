@@ -65,9 +65,9 @@ class PlayerExperience extends AbstractExperience {
       this.Sources[i-1].connect(this.Encoders[i-1].in);
       this.Encoders[i-1].out.connect(this.BinDecoders[i-1].in);
       this.BinDecoders[i-1].out.connect(this.Gains[i-1]);
-      // this.Gains[i-1].connect(this.audioContext.destination);
+      this.Gains[i-1].connect(this.audioContext.destination);
 
-      this.Monsters[i-1].subscribe(() => this.MoveMonster(i, this.globalsState.getValues().Distance, this.Monsters[i-1].getValues(), this.Encoders[i-1], this.Gains[i-1], this.playerState.getValues().ShotAngle));
+      this.Monsters[i-1].subscribe(() => this.MoveMonster(i, this.globalsState.getValues().Distance, this.Monsters[i-1].getValues(), this.Encoders[i-1], this.Gains[i-1], this.playerState.getValues().ShotAngle, this.Sounds[i-1]));
     }
 
     if (window.DeviceOrientationEvent) {
@@ -107,7 +107,7 @@ class PlayerExperience extends AbstractExperience {
     this.audioContext.resume();
     console.log("Lancement du jeu");
     for (let i = 1; i <= this.globalsState.getValues().NbMax; i++) {
-      this.Sounds[i-1].play();
+      // this.Sounds[i-1].play();
     }
     this.AudioDebut = true;
     this.render();
@@ -119,10 +119,10 @@ class PlayerExperience extends AbstractExperience {
     console.log("Le monstre " + Monster + " est apparu !");
   }
 
-  MoveMonster(MonsterId, GlobalDistance, Monster, encoder, Gain, ShotAngle) {
+  MoveMonster(MonsterId, GlobalDistance, Monster, encoder, Gain, ShotAngle, Sound) {
     this.UpdateSoundPos(Monster, GlobalDistance, encoder, Gain, ShotAngle);
     if ((this.ActiveMonsters[this.ActiveMonsters.length-1] == MonsterId) && Monster.Distance == GlobalDistance) {
-      Gain.connect(this.audioContext.destination);
+      Sound.play();
       console.log("Le monstre " + MonsterId + " a été connecté à l'audio en " + Monster.Position);
     }
     if (Monster.Killing) {
@@ -146,30 +146,33 @@ class PlayerExperience extends AbstractExperience {
   }
 
   KillMonster(tir, Monsters, Precision) {
-    for (let i = 0; i < this.ActiveMonsters.length; i++) {
+    var killTemp = this.killCount;
+    var iterator = 0;
+    while (iterator < this.ActiveMonsters.length && killTemp == this.killCount) {
       // console.log(Monsters[this.ActiveMonsters[i] - 1].getValues().Position);
-      if (Monsters[this.ActiveMonsters[i] - 1].getValues().Killing) {
-        if (Math.abs((tir - Monsters[this.ActiveMonsters[i] - 1].getValues().Position)) < Precision || Math.abs((tir - Monsters[this.ActiveMonsters[i] - 1].getValues().Position)) > 360 - Precision) {
-          // console.log(i, this.ActiveMonsters[i]-1)
-          this.killSound.play()
+      if (Monsters[this.ActiveMonsters[iterator] - 1].getValues().Killing) {
+        if (Math.abs((tir - Monsters[this.ActiveMonsters[iterator] - 1].getValues().Position)) < Precision || Math.abs((tir - Monsters[this.ActiveMonsters[iterator] - 1].getValues().Position)) > 360 - Precision) {
+          this.killSound.pause();
+          this.killSound.play();
           this.killCount += 1;
-          this.Gains[this.ActiveMonsters[i]-1].disconnect(this.audioContext.destination);
-          console.log("Le monstre " + this.ActiveMonsters[i] + " a été déconnecté de l'audio en " + Monsters[this.ActiveMonsters[i] - 1].getValues().Position);
+          this.Sounds[this.ActiveMonsters[iterator]-1].pause();
+          console.log("Le monstre " + this.ActiveMonsters[iterator] + " a été déconnecté de l'audio en " + Monsters[this.ActiveMonsters[iterator] - 1].getValues().Position);
           this.displayKills.push(document.createElement("div"));
           // console.log(Monsters)
           // console.log(this.ActiveMonsters[i])
           // console.log(Monsters[this.ActiveMonsters[i] - 1].getValues())
-          this.displayKills[this.killCount - 1].innerHTML = "Vous avez tué un monstre en : " + Monsters[this.ActiveMonsters[i] - 1].getValues().Position;
+          this.displayKills[this.killCount - 1].innerHTML = "Vous avez tué un monstre en : " + Monsters[this.ActiveMonsters[iterator] - 1].getValues().Position;
           if (this.killCount > 1) {
             // console.log(this.displayKills)
             this.displayKills[this.killCount - 1].appendChild(this.displayKills[this.killCount - 2])
           }
           this.lastDisplayKill = this.displayKills[this.killCount - 1];
-          console.log("Le monstre " + this.ActiveMonsters[i] + " est mort !");
-          this.ActiveMonsters.splice(i)
+          console.log("Le monstre " + this.ActiveMonsters[iterator] + " est mort !");
+          this.ActiveMonsters.splice(iterator, 1);
           this.render();
         }
       }
+      iterator += 1;
     }
   }
 
@@ -181,7 +184,7 @@ class PlayerExperience extends AbstractExperience {
         if (this.ActiveMonsters[i] == MonsterId) {
           this.playerState.set({Alive: false});
           for (let j = 0; j < this.ActiveMonsters.length; j++) {
-            this.Gains[this.ActiveMonsters[j]-1].disconnect(this.audioContext.destination);
+            this.Sounds[this.ActiveMonsters[j]-1].pause();
             console.log("Le monstre " + this.ActiveMonsters[j] + " a été déconnecté de l'audio car le joueur est mort");
           }
           this.ActiveMonsters = [];

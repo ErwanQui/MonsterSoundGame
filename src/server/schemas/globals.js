@@ -64,7 +64,7 @@ export default {
   	min: 0,
   	max: 180,
   	step: 1,
-  	default: 20,
+  	default: 180,
   },
 };
 

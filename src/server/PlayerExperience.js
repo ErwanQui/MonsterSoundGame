@@ -57,7 +57,7 @@ class PlayerExperience extends AbstractExperience {
       if (Values.Distance != 0)
       // console.log(Move)
       // console.log(Math.random()*(2*Move + 1) - Move)
-      Monster.set({Distance: Values.Distance - 1, Position: (Values.Position + Math.floor(Math.random()*(2*Move + 1)) - Move + 360)%360});
+        Monster.set({Distance: Values.Distance - 1, Position: (Values.Position + Math.floor(Math.random()*(2*Move + 1)) - Move + 360)%360});
       else {
         Monster.set({Distance: Global.getValues().Distance, Position: Math.floor(Math.random()*361), Killing: true});
       }
@@ -66,7 +66,7 @@ class PlayerExperience extends AbstractExperience {
       Monster.set({Activity: false, Position: 0, Killing: false});
     }
     if (Monster.getValues().Id == 1) {
-      console.log(this.clearing);
+      // console.log(this.clearing);
       console.log("Le monstre actif est le " + Global.getValues().CurrentMonster + "\n");
     }
     console.log(Monster.getValues());
